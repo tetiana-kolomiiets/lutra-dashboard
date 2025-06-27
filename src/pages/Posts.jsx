@@ -11,7 +11,7 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
@@ -19,31 +19,23 @@ import dayjs from 'dayjs';
 import Link from '@mui/material/Link';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import CustomerDataSources from '../components/CustomerDataSources';
-
-const mockCustomers = ['All Customers', 'TechCorp Solutions', 'Healthy Eats Cafe', 'FitLife Gym', 'Urban Boutique'];
-const mockData = [
-  { customer: 'TechCorp Solutions', post: 'Behind the scenes: Our development team works hard to deliver the best!', platform: 'facebook', date: '2024-12-19T16:30', reach: 8750, engagement: 425, clicks: 89, likes: 156, comments: 23, url: 'https://facebook.com/post/1' },
-  { customer: 'Healthy Eats Cafe', post: 'Fresh avocado toast with locally sourced ingredients! 🥑', platform: 'instagram', date: '2024-12-19T14:00', reach: 3420, engagement: 587, clicks: 45, likes: 398, comments: 67, url: 'https://instagram.com/post/2' },
-  { customer: 'TechCorp Solutions', post: 'Excited to announce our new AI-powered solution!', platform: 'linkedin', date: '2024-12-19T11:00', reach: 15420, engagement: 892, clicks: 156, likes: 234, comments: 45, url: 'https://linkedin.com/post/3' },
-  { customer: 'FitLife Gym', post: 'Morning motivation! 💪 Start your day strong 💥', platform: 'instagram', date: '2024-12-19T08:30', reach: 5670, engagement: 789, clicks: 123, likes: 456, comments: 89, url: 'https://instagram.com/post/4' },
-  { customer: 'Urban Boutique', post: 'New arrivals! 🧥 Check out our latest winter collection.', platform: 'instagram', date: '2024-12-18T22:00', reach: 4230, engagement: 698, clicks: 87, likes: 423, comments: 56, url: 'https://instagram.com/post/5' },
-  { customer: 'Healthy Eats Cafe', post: 'Weekly meal prep tips from our head chef! Save time, eat healthy.', platform: 'facebook', date: '2024-12-18T19:15', reach: 2890, engagement: 234, clicks: 34, likes: 178, comments: 28, url: 'https://facebook.com/post/6' },
-];
+import { AppContext } from '../context/appContext';
 
 const platforms = ['All Platforms', 'facebook', 'linkedin', 'instagram'];
 
-
-
 const Posts = () => {
   const [date, setDate] = useState(null);
+  const { posts, customers } = useContext(AppContext);
   const [platform, setPlatform] = useState('All Platforms');
   const [customer, setCustomer] = useState('All Customers');
 
-  const filteredData = mockData.filter(row =>
-    (platform === 'All Platforms' || row.platform === platform) &&
-    (customer === 'All Customers' || row.customer === customer) &&
+  const filteredData = posts.filter(row =>
+    (platform === 'All Platforms' || row.channel === platform) &&
+    (customer === 'All Customers' || row.customerId === customer) &&
     (!date || dayjs(row.date).isSame(dayjs(date), 'day'))
   );
+
+  const customerOptions = [{ referenceId: 'All Customers', name: 'All Customers' }, ...customers];
 
   return (
     <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -148,8 +140,8 @@ const Posts = () => {
               },
             }}
           >
-            {mockCustomers.map(c => (
-              <MenuItem key={c} value={c}>{c}</MenuItem>
+            {customerOptions.map(c => (
+              <MenuItem key={c.referenceId} value={c.referenceId}>{c.name}</MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -169,31 +161,35 @@ const Posts = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredData.map((row, idx) => (
-                <TableRow key={idx}>
-                  <TableCell align="center">{row.customer}</TableCell>
-                  <TableCell align="center" sx={{ maxWidth: 320 }}>
-                    <Link href={row.url} target="_blank" rel="noopener" underline="none" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <span style={{
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        display: 'block',
-                        flex: 1,
-                        minWidth: 0
-                      }}>{row.post}</span>
-                      <OpenInNewIcon sx={{ fontSize: 16, ml: 0.5, flexShrink: 0 }} />
-                    </Link>
-                  </TableCell>
-                  <TableCell align="center">
-                    <CustomerDataSources platforms={[row.platform]} />
-                  </TableCell>
-                  <TableCell align="center">{dayjs(row.date).format('MMM DD, YYYY HH:mm')}</TableCell>
-                  <TableCell align="center">{row.reach.toLocaleString()}</TableCell>
-                  <TableCell align="center">{row.clicks}</TableCell>
-                  <TableCell align="center">{row.likes}</TableCell>
-                </TableRow>
-              ))}
+              {filteredData.map((row, idx) => {
+                const isLink = row.link.includes('http');
+
+                return (
+                  <TableRow key={idx}>
+                    <TableCell align="center">{row.customerName}</TableCell>
+                    <TableCell align="center" sx={{ maxWidth: 320 }}>
+                      {isLink ? <Link href={row.link} target="_blank" rel="noopener" underline="none" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <span style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          display: 'block',
+                          flex: 1,
+                          minWidth: 0
+                        }}>{row.link}</span>
+                        <OpenInNewIcon sx={{ fontSize: 16, ml: 0.5, flexShrink: 0 }} />
+                      </Link> : <span>{row.link}</span>}
+                    </TableCell>
+                    <TableCell align="center">
+                      <CustomerDataSources platforms={[row.channel]} />
+                    </TableCell>
+                    <TableCell align="center">{dayjs(row.publicationDate).format('MMM DD, YYYY HH:mm')}</TableCell>
+                    <TableCell align="center">{row.impressions.toLocaleString()}</TableCell>
+                    <TableCell align="center">{row.clicks}</TableCell>
+                    <TableCell align="center">{row.likes}</TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </TableContainer>

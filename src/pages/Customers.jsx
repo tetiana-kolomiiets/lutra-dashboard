@@ -14,28 +14,30 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import TextField from '@mui/material/TextField';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import CustomerDataSources from '../components/CustomerDataSources';
+import { AppContext } from '../context/appContext';
 
-const mockCustomers = [
-  { name: 'TechCorp Solutions', budget: 5000, dataSource: 'facebook' },
-  { name: 'Healthy Eats Cafe', budget: 2000, dataSource: 'instagram' },
-  { name: 'FitLife Gym', budget: 3500, dataSource: 'instagram' },
-  { name: 'Urban Boutique', budget: 1500, dataSource: 'facebook' },
-];
+// const mockCustomers = [
+//   { name: 'TechCorp Solutions', budget: 5000, dataSource: 'facebook' },
+//   { name: 'Healthy Eats Cafe', budget: 2000, dataSource: 'instagram' },
+//   { name: 'FitLife Gym', budget: 3500, dataSource: 'instagram' },
+//   { name: 'Urban Boutique', budget: 1500, dataSource: 'facebook' },
+// ];
 
-function detectPlatform(url) {
-  if (!url) return '';
-  const lower = url.toLowerCase();
-  if (lower.includes('facebook')) return 'facebook';
-  if (lower.includes('instagram')) return 'instagram';
-  if (lower.includes('linkedin')) return 'linkedin';
-  return '';
-}
+// function detectPlatform(url) {
+//   if (!url) return '';
+//   const lower = url.toLowerCase();
+//   if (lower.includes('facebook')) return 'facebook';
+//   if (lower.includes('instagram')) return 'instagram';
+//   if (lower.includes('linkedin')) return 'linkedin';
+//   return '';
+// }
 
 const Customers = () => {
   const [open, setOpen] = useState(false);
-  const [customers, setCustomers] = useState(mockCustomers);
+  const { createCustomer, customers } = useContext(AppContext);
+  const [isCustomerCreating, setIsCustomerCreating] = useState(false);
   const [form, setForm] = useState({ name: '', sheet: '', budget: '' });
 
   const handleOpen = () => setOpen(true);
@@ -48,12 +50,15 @@ const Customers = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleCreate = () => {
-    const platform = detectPlatform(form.sheet);
-    setCustomers([
-      ...customers,
-      { name: form.name, budget: Number(form.budget), dataSource: platform },
-    ]);
+  const handleCreate = async () => {
+    setIsCustomerCreating(true);
+    await createCustomer({ name: form.name, spreadsheet: form.sheet, budget: Number(form.budget) });
+    setIsCustomerCreating(false);
+    // const platform = detectPlatform(form.sheet);
+    // setCustomers([
+    //   ...customers,
+    //   { name: form.name, budget: Number(form.budget), dataSource: platform },
+    // ]);
     handleClose();
   };
 
@@ -82,9 +87,9 @@ const Customers = () => {
               {customers.map((row, idx) => (
                 <TableRow key={idx}>
                   <TableCell align="center">{row.name}</TableCell>
-                  <TableCell align="center">{row.budget.toLocaleString()}</TableCell>
+                  <TableCell align="center">-</TableCell>
                   <TableCell align="center">
-                    <CustomerDataSources platforms={[row.dataSource]} />
+                    <CustomerDataSources platforms={[]} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -146,7 +151,7 @@ const Customers = () => {
         </DialogContent>
         <DialogActions sx={{ p: 2, pt: 0 }}>
           <Button onClick={handleClose} color="inherit">Cancel</Button>
-          <Button onClick={handleCreate} variant="contained" sx={{ bgcolor: '#E94E8A', '&:hover': { bgcolor: '#E94E8A' } }}>Create Project</Button>
+          <Button onClick={handleCreate} variant="contained" sx={{ bgcolor: '#E94E8A', '&:hover': { bgcolor: '#E94E8A' } }} disabled={isCustomerCreating}>Create Project</Button>
         </DialogActions>
       </Dialog>
     </Box>

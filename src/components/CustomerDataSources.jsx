@@ -9,7 +9,7 @@ const platformColors = {
 
 const CustomerDataSources = ({ platforms }) => (
   <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-    {platforms.map((platform, idx) => (
+    {platforms.length ? platforms.map((platform, idx) => (
       <Chip
         key={platform + idx}
         label={platform}
@@ -24,7 +24,7 @@ const CustomerDataSources = ({ platforms }) => (
         }}
         size="small"
       />
-    ))}
+    )) : <Chip label="No data" sx={{ fontWeight: 500, color: '#1976d2', bgcolor: '#e3f0ff', textTransform: 'lowercase', px: 1.5, fontSize: 14, borderRadius: 2 }} size="small" />}
   </Box>
 );
 

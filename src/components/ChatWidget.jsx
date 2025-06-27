@@ -31,7 +31,7 @@ const ChatWidget = () => {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        sx={{ zIndex: 1400, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end' }}
+        sx={{ zIndex: 1400, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', width: '100%' }}
         slotProps={{ backdrop: { sx: { backgroundColor: 'transparent' } } }}
         closeAfterTransition
       >

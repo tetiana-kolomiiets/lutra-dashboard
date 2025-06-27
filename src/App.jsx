@@ -1,38 +1,42 @@
-import { BrowserRouter as Router, Link } from 'react-router-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Sidebar from './components/Sidebar';
 import AppRoutes from './Routes';
 import ChatWidget from './components/ChatWidget';
+import { useApp } from './useApp';
+import { AppContext } from './context/appContext';
 
 const App = () => {
   return (
-    <Router basename="/lutra-dashboard">
-      <Box
-        sx={{
-          display: 'flex',
-          height: 'calc(100vh - 16px)',
-          bgcolor: '#fafafa',
-          overflow: 'hidden',
-        }}
-      >
-        <Sidebar />
+    <AppContext.Provider value={useApp()}>
+      <Router basename="/lutra-dashboard">
         <Box
-          component="main"
           sx={{
-            flexGrow: 1,
             display: 'flex',
-            flexDirection: 'column',
-            height: 'calc(100vh - 32px)',
-            overflow: 'hidden',
-            p: 4,
+            height: 'calc(100vh - 16px)',
             bgcolor: '#fafafa',
+            overflow: 'hidden',
           }}
         >
-          <AppRoutes />
+          <Sidebar />
+          <Box
+            component="main"
+            sx={{
+              flexGrow: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              height: 'calc(100vh - 32px)',
+              overflow: 'hidden',
+              p: 4,
+              bgcolor: '#fafafa',
+            }}
+          >
+            <AppRoutes />
+          </Box>
         </Box>
-      </Box>
-      <ChatWidget />
-    </Router>
+        <ChatWidget />
+      </Router>
+    </AppContext.Provider>
   );
 };
 

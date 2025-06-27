@@ -16,56 +16,58 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import CustomerDataSources from '../components/CustomerDataSources';
-
-const mockStats = [
-  {
-    label: 'Total Spend',
-    value: '$4,525.00',
-    icon: <AttachMoneyIcon sx={{ color: 'text.secondary', fontSize: 22 }} />, // $ icon
-    unit: '$',
-  },
-  {
-    label: 'Total Impressions',
-    value: '170,600',
-    icon: <VisibilityIcon sx={{ color: 'text.secondary', fontSize: 22 }} />, // eye icon
-    unit: '',
-  },
-  {
-    label: 'Total Clicks',
-    value: '3,536',
-    icon: <MouseIcon sx={{ color: 'text.secondary', fontSize: 22 }} />, // mouse icon
-    unit: '',
-  },
-  {
-    label: 'Average CTR',
-    value: '2.22%',
-    icon: <PercentIcon sx={{ color: 'text.secondary', fontSize: 22 }} />, // percent icon
-    unit: '%',
-  },
-];
+import { AppContext } from '../context/appContext';
 
 const platforms = ['All Platforms', 'facebook', 'instagram', 'linkedin'];
-const customers = ['All Customers', 'TechCorp Solutions', 'Healthy Eats Cafe', 'FitLife Gym', 'Urban Boutique'];
-
-const mockTable = [
-  { customer: 'TechCorp Solutions', campaign: 'Holiday Sale', platform: 'facebook', dates: 'Dec 1-31', spend: 1200, impressions: 50000, clicks: 1200, ctr: '2.4%', cpc: '$1.00' },
-  { customer: 'Healthy Eats Cafe', campaign: 'Winter Menu', platform: 'instagram', dates: 'Dec 5-20', spend: 800, impressions: 30000, clicks: 900, ctr: '3.0%', cpc: '$0.89' },
-  { customer: 'FitLife Gym', campaign: 'New Year Fitness', platform: 'linkedin', dates: 'Dec 10-31', spend: 1500, impressions: 60000, clicks: 800, ctr: '1.3%', cpc: '$1.88' },
-  { customer: 'Urban Boutique', campaign: 'Winter Collection', platform: 'facebook', dates: 'Dec 1-15', spend: 1025, impressions: 30500, clicks: 636, ctr: '2.1%', cpc: '$1.61' },
-];
-
-
 
 const Campaigns = () => {
+  const { campaigns, customers } = useContext(AppContext);
   const [platform, setPlatform] = useState('All Platforms');
   const [customer, setCustomer] = useState('All Customers');
 
-  const filteredData = mockTable.filter(row =>
-    (platform === 'All Platforms' || row.platform === platform) &&
-    (customer === 'All Customers' || row.customer === customer)
+  const filteredData = campaigns.filter(row =>
+    (platform === 'All Platforms' || row.channel === platform) &&
+    (customer === 'All Customers' || row.customerId === customer)
   );
+
+  const statsTotal = filteredData.reduce((acc, row) => {
+    acc.totalSpend += row.spend;
+    acc.totalImpressions += row.impressions;
+    acc.totalClicks += row.clicks;
+    acc.totalCtr += row.ctr;
+    return acc;
+  }, { totalSpend: 0, totalImpressions: 0, totalClicks: 0, totalCtr: 0 });
+
+  const customerOptions = [{ referenceId: 'All Customers', name: 'All Customers' }, ...customers];
+
+  const stats = [
+    {
+      label: 'Total Spend',
+      value: `$${statsTotal.totalSpend.toLocaleString()}`,
+      icon: <AttachMoneyIcon sx={{ color: 'text.secondary', fontSize: 22 }} />, // $ icon
+      unit: '$',
+    },
+    {
+      label: 'Total Impressions',
+      value: statsTotal.totalImpressions.toLocaleString(),
+      icon: <VisibilityIcon sx={{ color: 'text.secondary', fontSize: 22 }} />, // eye icon
+      unit: '',
+    },
+    {
+      label: 'Total Clicks',
+      value: statsTotal.totalClicks.toLocaleString(),
+      icon: <MouseIcon sx={{ color: 'text.secondary', fontSize: 22 }} />, // mouse icon
+      unit: '',
+    },
+    {
+      label: 'Average CTR',
+      value: statsTotal.totalCtr ? `${statsTotal.totalCtr.toFixed(2)}%` : '-',
+      icon: <PercentIcon sx={{ color: 'text.secondary', fontSize: 22 }} />, // percent icon
+      unit: '%',
+    },
+  ];
 
   return (
     <Box sx={{display: 'flex', flexDirection: 'column', gap: 2, height: '100%'}}>
@@ -75,7 +77,7 @@ const Campaigns = () => {
       </Typography>
       <Typography variant="description">Monthly paid advertising performance overview</Typography>
       <Box sx={{ display: 'flex', gap: 3, mt: 2, mb: 2 }}>
-        {mockStats.map((stat) => (
+        {stats.map((stat) => (
           <Paper key={stat.label} elevation={0} sx={{ flex: 1, minWidth: 220, p: 3, borderRadius: 3, boxShadow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: 70 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
               <Typography variant="subtitle2" color="text.secondary" fontWeight={500}>{stat.label}</Typography>
@@ -133,8 +135,8 @@ const Campaigns = () => {
               },
             }}
           >
-            {customers.map(c => (
-              <MenuItem key={c} value={c}>{c}</MenuItem>
+            {customerOptions.map(c => (
+              <MenuItem key={c.referenceId} value={c.referenceId}>{c.name}</MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -158,17 +160,17 @@ const Campaigns = () => {
             <TableBody>
               {filteredData.map((row, idx) => (
                 <TableRow key={idx}>
-                  <TableCell align="center">{row.customer}</TableCell>
-                  <TableCell align="center">{row.campaign}</TableCell>
+                  <TableCell align="center">{row.customerName}</TableCell>
+                  <TableCell align="center">{row.name}</TableCell>
                   <TableCell align="center">
-                    <CustomerDataSources platforms={[row.platform]} />
+                    <CustomerDataSources platforms={[row.channel]} />
                   </TableCell>
-                  <TableCell align="center">{row.dates}</TableCell>
+                  <TableCell align="center">-</TableCell>
                   <TableCell align="center">${row.spend.toLocaleString()}</TableCell>
                   <TableCell align="center">{row.impressions.toLocaleString()}</TableCell>
                   <TableCell align="center">{row.clicks}</TableCell>
                   <TableCell align="center">{row.ctr}</TableCell>
-                  <TableCell align="center">{row.cpc}</TableCell>
+                  <TableCell align="center">-</TableCell>
                 </TableRow>
               ))}
             </TableBody>
